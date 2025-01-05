@@ -10,6 +10,12 @@ from time import sleep
 app = Flask(__name__)
 app.config['STATIC_FOLDER'] = './static'
 
+
+from scapy.all import traceroute
+
+result, _ = traceroute("8.8.8.8")
+result.show()
+
 def ensure_directory_exists(file_path):
     directory = os.path.dirname(file_path)
 
