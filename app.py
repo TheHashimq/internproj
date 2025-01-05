@@ -12,6 +12,16 @@ app = Flask(__name__)
 # SSH Check function
 # SSH Check function (with simplified status)
 
+def ensure_directory_exists(file_path):
+    # Get the directory path from the full file path
+    directory = os.path.dirname(file_path)
+
+    if directory and not os.path.exists(directory):
+        os.makedirs(directory)  # Create the directory if it doesn't exist
+
+# In your functions, call it before writing to the file
+ensure_directory_exists('./ssh_status.csv')
+
 def cleanup_csv_if_needed(file_path, max_lines=10000):
     try:
         # Ensure the directory exists
@@ -61,6 +71,8 @@ def periodic_ssh_check():
         # Perform SSH login check
         status = check_ssh(server_info["host"], server_info["port"], server_info["username"], server_info["password"])
 
+        ensure_directory_exists('./ssh_status.csv')
+        
         if not os.path.exists('ssh_status.csv'):
             columns = ["timestamp", "host", "status"]
             # Create an empty CSV with column headers
@@ -110,6 +122,8 @@ def periodic_traceroute():
         timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         host = "8.8.8.8"  # Replace with the target for traceroute
         status, hops = perform_traceroute(host)
+
+        ensure_directory_exists('./traceroute_status.csv')
 
         if not os.path.exists('traceroute_status.csv'):
             columns = ["timestamp", "host", "status", "hop_number", "rtt"]
