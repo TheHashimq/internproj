@@ -14,6 +14,15 @@ app = Flask(__name__)
 
 def cleanup_csv_if_needed(file_path, max_lines=10000):
     try:
+        # Ensure the directory exists
+        dir_name = os.path.dirname(file_path)
+        if not os.path.exists(dir_name):
+            os.makedirs(dir_name)
+
+        # Read the CSV file
+        df = pd.read_csv(file_path)
+        
+
         # Read the CSV file
         df = pd.read_csv(file_path)
         
@@ -51,6 +60,11 @@ def periodic_ssh_check():
 
         # Perform SSH login check
         status = check_ssh(server_info["host"], server_info["port"], server_info["username"], server_info["password"])
+
+        if not os.path.exists('ssh_status.csv'):
+            columns = ["timestamp", "host", "status"]
+            # Create an empty CSV with column headers
+            pd.DataFrame(columns=columns).to_csv('ssh_status.csv', index=False)
 
         # Append result to SSH CSV file (important columns: timestamp, host, status)
         data = pd.DataFrame([{"timestamp": timestamp, "host": server_info["host"], "status": status}])
@@ -96,6 +110,11 @@ def periodic_traceroute():
         timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         host = "8.8.8.8"  # Replace with the target for traceroute
         status, hops = perform_traceroute(host)
+
+        if not os.path.exists('traceroute_status.csv'):
+            columns = ["timestamp", "host", "status", "hop_number", "rtt"]
+            # Create an empty CSV with column headers
+            pd.DataFrame(columns=columns).to_csv('traceroute_status.csv', index=False)
 
         # If traceroute was successful, write hops to CSV
         if status == "Success":
