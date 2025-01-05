@@ -10,12 +10,6 @@ from time import sleep
 app = Flask(__name__)
 app.config['STATIC_FOLDER'] = './static'
 
-
-from scapy.all import traceroute
-
-result, _ = traceroute("8.8.8.8")
-result.show()
-
 def ensure_directory_exists(file_path):
     directory = os.path.dirname(file_path)
 
@@ -115,7 +109,7 @@ def perform_traceroute(host):
 def periodic_traceroute():
     while True:
         timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        host = "8.8.8.8"  # Replace with the target for traceroute
+        host = "1.1.1.1"  # Replace with the target for traceroute
         status, hops = perform_traceroute(host)
 
         # Ensure the directory exists
@@ -150,7 +144,7 @@ def periodic_traceroute():
             data.to_csv('./static/traceroute.csv', mode='a', header=False, index=False)
 
         cleanup_csv_if_needed('./static/traceroute.csv')
-        sleep(60)  # Wait for 60 seconds before the next check
+        sleep(10)  # Wait for 60 seconds before the next check
 
 # Start the periodic tasks in separate threads
 thread_ssh = threading.Thread(target=periodic_ssh_check, daemon=True)
