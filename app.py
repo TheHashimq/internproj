@@ -8,34 +8,25 @@ from datetime import datetime
 from time import sleep
 
 app = Flask(__name__)
-
-# SSH Check function
-# SSH Check function (with simplified status)
+app.config['STATIC_FOLDER'] = './static'
 
 def ensure_directory_exists(file_path):
-    # Get the directory path from the full file path
     directory = os.path.dirname(file_path)
 
     if directory and not os.path.exists(directory):
         os.makedirs(directory)  # Create the directory if it doesn't exist
 
-# In your functions, call it before writing to the file
-ensure_directory_exists('./ssh_status.csv')
+# Ensure the directory for the CSV files exists
+ensure_directory_exists('./static/ssh_status.csv')
+ensure_directory_exists('./static/traceroute.csv')
 
 def cleanup_csv_if_needed(file_path, max_lines=10000):
     try:
-        # Ensure the directory exists
-        dir_name = os.path.dirname(file_path)
-        if not os.path.exists(dir_name):
-            os.makedirs(dir_name)
+        if not os.path.exists(file_path):
+            return
 
-        # Read the CSV file
         df = pd.read_csv(file_path)
-        
 
-        # Read the CSV file
-        df = pd.read_csv(file_path)
-        
         # Check if the file has more than 'max_lines' lines
         if len(df) > max_lines:
             # Remove the first half of the data (keeping the second half)
@@ -71,17 +62,14 @@ def periodic_ssh_check():
         # Perform SSH login check
         status = check_ssh(server_info["host"], server_info["port"], server_info["username"], server_info["password"])
 
-        ensure_directory_exists('./ssh_status.csv')
-        
-        if not os.path.exists('ssh_status.csv'):
-            columns = ["timestamp", "host", "status"]
-            # Create an empty CSV with column headers
-            pd.DataFrame(columns=columns).to_csv('ssh_status.csv', index=False)
+        # Ensure directory exists
+        ensure_directory_exists('./static/ssh_status.csv')
 
         # Append result to SSH CSV file (important columns: timestamp, host, status)
         data = pd.DataFrame([{"timestamp": timestamp, "host": server_info["host"], "status": status}])
-        data.to_csv('ssh_status.csv', mode='a', header=False, index=False)
-        cleanup_csv_if_needed('ssh_status.csv')
+        data.to_csv('./static/ssh_status.csv', mode='a', header=False, index=False)
+
+        cleanup_csv_if_needed('./static/ssh_status.csv')
         sleep(60)  # Wait for 60 seconds before the next check
 
 def perform_traceroute(host):
@@ -116,6 +104,7 @@ def perform_traceroute(host):
 
     except Exception:
         return "Failed", "N/A"
+
 # Background Task to perform traceroute and update CSV
 def periodic_traceroute():
     while True:
@@ -123,12 +112,8 @@ def periodic_traceroute():
         host = "8.8.8.8"  # Replace with the target for traceroute
         status, hops = perform_traceroute(host)
 
-        ensure_directory_exists('./traceroute_status.csv')
-
-        if not os.path.exists('traceroute_status.csv'):
-            columns = ["timestamp", "host", "status", "hop_number", "rtt"]
-            # Create an empty CSV with column headers
-            pd.DataFrame(columns=columns).to_csv('traceroute_status.csv', index=False)
+        # Ensure the directory exists
+        ensure_directory_exists('./static/traceroute.csv')
 
         # If traceroute was successful, write hops to CSV
         if status == "Success":
@@ -143,7 +128,7 @@ def periodic_traceroute():
                     "rtt2": hop["rtt2"],
                     "rtt3": hop["rtt3"]
                 }])
-                data.to_csv('traceroute_status.csv', mode='a', header=False, index=False)
+                data.to_csv('./static/traceroute.csv', mode='a', header=False, index=False)
         else:
             # Handle failure case
             data = pd.DataFrame([{
@@ -156,27 +141,28 @@ def periodic_traceroute():
                 "rtt2": 'N/A',
                 "rtt3": 'N/A'
             }])
-            data.to_csv('traceroute_status.csv', mode='a', header=False, index=False)
-        cleanup_csv_if_needed('ssh_status.csv')
-        sleep(60) 
+            data.to_csv('./static/traceroute.csv', mode='a', header=False, index=False)
+
+        cleanup_csv_if_needed('./static/traceroute.csv')
+        sleep(60)  # Wait for 60 seconds before the next check
+
+# Start the periodic tasks in separate threads
+thread_ssh = threading.Thread(target=periodic_ssh_check, daemon=True)
+thread_traceroute = threading.Thread(target=periodic_traceroute, daemon=True)
+thread_ssh.start()
+thread_traceroute.start()
 
 @app.route('/')
 def index():
-    return "Web App is running! Check /download_ssh_csv or /download_traceroute_csv for CSV files."
+    return 'Service is running'
 
 @app.route('/download_ssh_csv')
 def download_ssh_csv():
-    try:
-        return send_file('ssh_status.csv', as_attachment=True)
-    except Exception as e:
-        return f"Error: {str(e)}"
+    return send_file('./static/ssh_status.csv', as_attachment=True)
 
 @app.route('/download_traceroute_csv')
 def download_traceroute_csv():
-    try:
-        return send_file('traceroute_status.csv', as_attachment=True)
-    except Exception as e:
-        return f"Error: {str(e)}"
+    return send_file('./static/traceroute.csv', as_attachment=True)
 
 if __name__ == '__main__':
     # Start background threads for SSH and Traceroute checks
@@ -187,4 +173,3 @@ if __name__ == '__main__':
     ssh_thread.start()
     traceroute_thread.start()
     app.run(debug=True)
-
