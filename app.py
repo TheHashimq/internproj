@@ -55,7 +55,7 @@ def periodic_ssh_check():
         data = pd.DataFrame([{"timestamp": timestamp, "host": server_info["host"], "status": status}])
         data.to_csv('./static/ssh_status.csv', mode='a', header=False, index=False)
         cleanup_csv_if_needed('./static/ssh_status.csv')
-        sleep(60)  
+        sleep(300)  
 
 def perform_traceroute(host):
     try:
@@ -118,7 +118,7 @@ def periodic_traceroute():
             data.to_csv('./static/traceroute.csv', mode='a', header=False, index=False)
 
         cleanup_csv_if_needed('./static/traceroute.csv')
-        sleep(60) 
+        sleep(300) 
 
 thread_ssh = threading.Thread(target=periodic_ssh_check, daemon=True)
 thread_traceroute = threading.Thread(target=periodic_traceroute, daemon=True)
