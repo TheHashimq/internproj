@@ -109,7 +109,7 @@ def perform_traceroute(host):
 def periodic_traceroute():
     while True:
         timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        host = "1.1.1.1"  # Replace with the target for traceroute
+        host = "8.8.8.8"  # Replace with the target for traceroute
         status, hops = perform_traceroute(host)
 
         # Ensure the directory exists
@@ -172,4 +172,4 @@ if __name__ == '__main__':
     traceroute_thread.daemon = True  # Allow threads to be killed when app exits
     ssh_thread.start()
     traceroute_thread.start()
-    app.run(debug=True)
+    app.run(host='0.0.0.0' , port=5000 ,debug=True)
