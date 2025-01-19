@@ -15,7 +15,7 @@ app.config['STATIC_FOLDER'] = './static'
 
 # Email settings
 EMAIL_SENDER = 'hashimq905@gmail.com'  
-EMAIL_PASSWORD = 'vium fjgt abih duoz'  
+EMAIL_PASSWORD = ''  
 EMAIL_RECIPIENT = 'hashimq905@gmail.com'  
 SMTP_SERVER = 'smtp.gmail.com'
 SMTP_PORT = 587
