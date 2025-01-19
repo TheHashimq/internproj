@@ -1,3 +1,4 @@
+timestamp,host,status,hop_number,host_ip,rtt1,rtt2,rtt3
 2025-01-05 11:31:25,8.8.8.8,Failed,N/A,N/A,N/A,N/A,N/A
 2025-01-05 11:31:25,8.8.8.8,Failed,N/A,N/A,N/A,N/A,N/A
 2025-01-05 11:31:59,8.8.8.8,Success,traceroute,to,8.8.8.8,"(8.8.8.8),",30
